@@ -1,2 +1,55 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+
+# Entorno virtual / dependencias locales
+.venv/
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.pytype/
+.coverage
+.coverage.*
+htmlcov/
+
+# Archivos de entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Docker / contenedores
+*.log
+
+# Datos locales y generados
+data/
+!data/.gitkeep
+output/
+resultados/
+tmp/
+temp/
+
+# Archivos del proyecto que no deben subirse
+*.csv
+*.tsv
+*.parquet
+*.json
+*.sqlite3
+*.db
+
+# Subidas o artefactos de Hadoop
+part-*
+*_SUCCESS
+*_FAILURE
+
+# IDE / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
