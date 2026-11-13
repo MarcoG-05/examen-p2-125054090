@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.6
 # Hadoop standalone sobre Debian.
 # Hadoop 3.3.x solo soporta Java 8/11 (Java 17 no es oficial), por eso se copia
 # un OpenJDK 11 (Temurin) desde una etapa previa y se mantiene Debian como base.
@@ -42,24 +43,24 @@ RUN useradd -m -s /bin/bash hadoop \
 RUN printf 'PasswordAuthentication no\nPermitRootLogin no\nPubkeyAuthentication yes\n' \
       > /etc/ssh/sshd_config.d/10-hardening.conf
 
-# Script de arranque embebido (requiere Docker 23+ / BuildKit).
+# Script de arranque generado dentro de la imagen para evitar depender de BuildKit.
 # Genera llaves SSH sin contrasena (una sola vez, en el volumen ssh_keys).
-COPY <<'EOF' /entrypoint.sh
-#!/bin/bash
-set -e
-SSH_DIR=/home/hadoop/.ssh
-ssh-keygen -A
-if [ ! -f "$SSH_DIR/id_ed25519" ]; then
-  runuser -u hadoop -- ssh-keygen -t ed25519 -N "" -q -f "$SSH_DIR/id_ed25519"
-  cat "$SSH_DIR/id_ed25519.pub" > "$SSH_DIR/authorized_keys"
-fi
-printf 'Host localhost hadoop\n    StrictHostKeyChecking accept-new\n' > "$SSH_DIR/config"
-chown -R hadoop:hadoop "$SSH_DIR"
-chmod 700 "$SSH_DIR"
-chmod 600 "$SSH_DIR/id_ed25519" "$SSH_DIR/authorized_keys" "$SSH_DIR/config"
-exec "$@"
-EOF
-RUN chmod +x /entrypoint.sh
+RUN printf '%s\n' \
+  '#!/bin/bash' \
+  'set -e' \
+  'SSH_DIR=/home/hadoop/.ssh' \
+  'ssh-keygen -A' \
+  'if [ ! -f "$SSH_DIR/id_ed25519" ]; then' \
+  '  runuser -u hadoop -- ssh-keygen -t ed25519 -N "" -q -f "$SSH_DIR/id_ed25519"' \
+  '  cat "$SSH_DIR/id_ed25519.pub" > "$SSH_DIR/authorized_keys"' \
+  'fi' \
+  'printf "Host localhost hadoop\n    StrictHostKeyChecking accept-new\n" > "$SSH_DIR/config"' \
+  'chown -R hadoop:hadoop "$SSH_DIR"' \
+  'chmod 700 "$SSH_DIR"' \
+  'chmod 600 "$SSH_DIR/id_ed25519" "$SSH_DIR/authorized_keys" "$SSH_DIR/config"' \
+  'exec "$@"' \
+  > /entrypoint.sh \
+ && chmod +x /entrypoint.sh
 
 EXPOSE 22
 ENTRYPOINT ["/entrypoint.sh"]
